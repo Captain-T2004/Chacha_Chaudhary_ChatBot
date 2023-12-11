@@ -4,61 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chacha Chaudhary Talking Chatbot</title>
+    <title>Chacha Chaudhary Voice ChatBot</title>
 </head>
 <body>
-    <h1>Chacha Chaudhary Talking Chatbot</h1>
-    <form id="chat-form">
-        <label for="user-input">Your question:</label>
-        <input type="text" id="user-input" name="user_input">
-        <button type="button" onclick="startRecording()">Speak</button>
-        <button type="button" onclick="processInput()">Submit</button>
+    <h1>Chacha Chaudhary Voice ChatBot</h1>
+    
+    <form action="/process_audio" method="post">
+        <button type="submit">Ask a Question</button>
     </form>
-    <div>
-        <!-- <p id="input-text"><strong>Input Voice Text:</strong> </p>
-        <p id="response-text"><strong>Response:</strong> </p> -->
-    </div>
 
-    <script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
-    <script>
-        var socket = io.connect('http://' + document.domain + ':' + location.port);
+    {% if question %}
+        <p>Question: {{ question }}</p>
+    {% endif %}
 
-        // Function to start recording
-        function startRecording() {
-            var recognition = new webkitSpeechRecognition();
-            recognition.onresult = function (event) {
-                var user_input = event.results[0][0].transcript;
-                document.getElementById('user-input').value = user_input;
-                document.getElementById('input-text').innerText = '<strong>Input Voice Text:</strong> ' + user_input;
-                stopRecording();
-            };
-            recognition.start();
-        }
+    {% if response %}
+        <p>Response: {{ response }}</p>
+    {% endif %}
 
-        // Function to stop recording
-        function stopRecording() {
-            socket.emit('process_input', { user_input: document.getElementById('user-input').value });
-        }
-
-        // Function to process user input
-        function processInput() {
-            var userInput = document.getElementById('user-input').value;
-
-            // Send the user input to the server
-            socket.emit('process_input', { user_input: userInput });
-        }
-
-        // Event listener for server response
-        socket.on('response', function(data) {
-            // Display the response
-            document.getElementById('response-text').innerHTML = '<strong>Response:</strong> ' + data.response;
-            
-            // Convert the response to speech
-            var utterance = new SpeechSynthesisUtterance(data.response);
-            window.speechSynthesis.speak(utterance);
-        });
-    </script>
+    {% if error %}
+        <p>Error: {{ error }}</p>
+    {% endif %}
 </body>
 </html>
-
