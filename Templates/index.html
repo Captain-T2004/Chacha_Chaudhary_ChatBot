@@ -4,25 +4,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> 
     <title>Chacha Chaudhary Voice ChatBot</title>
 </head>
 <body>
     <h1>Chacha Chaudhary Voice ChatBot</h1>
-    
-    <form action="/process_audio" method="post">
-        <button type="submit">Ask a Question</button>
-    </form>
-
-    {% if question %}
-        <p>Question: {{ question }}</p>
-    {% endif %}
+    <button id = "start">Start</button>
+    <button onclick="sendData()">submit</button>
+    <p id = "output"></p>
+    <p id = "result"></p>
 
     {% if response %}
+        <p>HIIII</p>
         <p>Response: {{ response }}</p>
     {% endif %}
-
     {% if error %}
         <p>Error: {{ error }}</p>
     {% endif %}
+    <script>
+        const output = document.getElementById('output');
+        const start = document.getElementById('start');
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.continuous = false;
+
+
+        start.addEventListener('click', () => {
+            output.textContent = "";
+            recognition.start();
+            console.log('recognition started');
+        });
+
+        recognition.onresult = (event) => {
+            output.textContent += event.results[event.results.length - 1][0].transcript;
+            console.log(event);
+        };
+        function sendData() {  
+            $.ajax({ 
+                url: '/', 
+                type: 'POST', 
+                contentType: 'application/json', 
+                data: JSON.stringify({ 'question': output.textContent }),
+                success: function(response) { 
+                    document.getElementById('result').innerHTML = response.result; 
+                }, 
+                error: function(error) { 
+                    console.log(error); 
+                } 
+            }); 
+        } 
+    </script>
 </body>
 </html>
