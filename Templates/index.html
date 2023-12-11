@@ -1,0 +1,28 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chacha Chaudhary Voice ChatBot</title>
+</head>
+<body>
+    <h1>Chacha Chaudhary Voice ChatBot</h1>
+    
+    <form action="/process_audio" method="post">
+        <button type="submit">Ask a Question</button>
+    </form>
+
+    {% if question %}
+        <p>Question: {{ question }}</p>
+    {% endif %}
+
+    {% if response %}
+        <p>Response: {{ response }}</p>
+    {% endif %}
+
+    {% if error %}
+        <p>Error: {{ error }}</p>
+    {% endif %}
+</body>
+</html>
