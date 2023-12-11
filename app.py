@@ -1,49 +1,52 @@
-
-from flask import Flask, render_template
-from flask_socketio import SocketIO, emit
+from flask import Flask, render_template, request
 import speech_recognition as sr
-import pyttsx3
 from langchain.llms import GooglePalm
 from langchain.prompts import PromptTemplate
 from langchain import LLMChain
+import pyttsx3
 
-app = Flask(__name__)
-socketio = SocketIO(app)
+app = Flask(_name_)
 
-# Set up the LLMChain, GooglePalm, and PromptTemplate
 api_key = 'AIzaSyCG1msBTRTQdLSQfU9JpN6KVrGG3nPRswM'
 llm = GooglePalm(google_api_key=api_key, temperature=0.1)
-
-prompt_template = 'consider yourself as Chacha Chaudhary, a comic character who is the mascot of the Namami Gange Project who will welcome the user with Namaste and supposed to impart knowledge about rivers, conservation, and all. Try to remain casual while talking as most users will be children and young people. also provide relevant links of sources. Avoid all irrelevant questions not related to Ganga and rivers. Make sure not to answer irrelevant questions by saying, "let us try to stick to the topic of Ganga and NMCG, you can ask me anything related to that. Now, answer the following question: {question}'
-
+prompt_template = 'answer the following question: {question}'
 prompt = PromptTemplate.from_template(prompt_template)
 llm_chain = LLMChain(prompt=prompt, llm=llm)
 
-# Function for text-to-speech
-def text_to_speech(text):
-    engine = pyttsx3.init()
-    engine.say(text)
-    engine.runAndWait()
+engine = pyttsx3.init()
 
-# Web route for the home page
 @app.route('/')
-def home():
+def index():
     return render_template('index.html')
 
-# Web socket route for processing the user's input
-@socketio.on('process_input')
-def process_input(data):
-    user_input = data['user_input']
-    question = user_input
+@app.route('/process_audio', methods=['POST'])
+def process_audio():
+    try:
+        recognizer = sr.Recognizer()
 
-    # Use LLMChain to get the response
-    response = llm_chain.run({"question": question})
+        with sr.Microphone() as source:
+            print("Say something...")
+            audio = recognizer.listen(source, timeout=5)
 
-    # Convert the response to speech
-    text_to_speech(response)
+        question = recognizer.recognize_google(audio)
+        response = llm_chain.run({"question": question})
 
-    # Emit the response to the client
-    emit('response', {'response': response})
+        # Text response
+        text_response = f"Question: {question}\nResponse: {response}"
 
-if __name__ == '__main__':
-    socketio.run(app, debug=True)
+        # Audio response
+        engine.say(text_response)
+        engine.runAndWait()
+
+        return render_template('index.html', question=question, response=response, text_response=text_response)
+
+    except sr.UnknownValueError:
+        return render_template('index.html', error="Sorry, could not understand audio.")
+    except sr.RequestError as e:
+        return render_template('index.html', error=f"Could not request results from Google Speech Recognition service; {e}")
+    except RuntimeError:
+        # Restart the speech recognition loop
+        return render_template('index.html', error="RuntimeError occurred. Please try again.")
+
+if _name_ == '_main_':
+    app.run(debug=True)
