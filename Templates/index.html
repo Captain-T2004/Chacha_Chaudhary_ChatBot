@@ -26,6 +26,7 @@
         const start = document.getElementById('start');
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const speechSynthesis = window.speechSynthesis || window.webkitSpeechSynthesis;
         const recognition = new SpeechRecognition();
         recognition.lang = 'en-US';
         recognition.interimResults = false;
@@ -36,6 +37,7 @@
             output.textContent = "";
             recognition.start();
             console.log('recognition started');
+            speechSynthesis.cancel();
         });
 
         recognition.onresult = (event) => {
@@ -49,7 +51,21 @@
                 contentType: 'application/json', 
                 data: JSON.stringify({ 'question': output.textContent }),
                 success: function(response) { 
-                    document.getElementById('result').innerHTML = response.result; 
+                    document.getElementById('result').innerHTML = response.result;
+                    var msg = response.result;
+                    const myArray = msg.split("\n\n")
+                    var filterText = "";
+                    for(let i = 0; i<myArray.length; i++){ 
+                        if(!myArray[i].includes("HTTPS") && !myArray[i].includes("HTTP") && !myArray[i].includes("https") && !myArray[i].includes("http")){
+                            filterText += myArray[i];
+                        }   
+                    }
+                    console.log(filterText);
+                    const utterance = new SpeechSynthesisUtterance(filterText);
+                    utterance.rate = 0.8;
+                    utterance.pitch = 1;
+                    utterance.volume = 1;
+                    speechSynthesis.speak(utterance);
                 }, 
                 error: function(error) { 
                     console.log(error); 
