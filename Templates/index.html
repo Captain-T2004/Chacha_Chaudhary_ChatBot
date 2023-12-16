@@ -6,17 +6,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> 
     <title>Chacha Chaudhary Voice ChatBot</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: row;
+        }
+        div {
+            width: 50vw;
+            height: 100vh;
+        }
+    </style>
 </head>
 <body>
-    <h1>Chacha Chaudhary Voice ChatBot</h1>
-    <!-- TEXT BOX FOR INP -->
-    <input style="width: 500px;" type="text" id="output" name="output" placeholder="Enter your query from Chacha.."><br>
-    <!-- BUTTON TO START REC -->
-    <button id = "start">Start</button>
-    <!-- BUTTON TO SUBMIT -->
-    <button onclick="sendData()">submit</button>
-    <!-- AREA TO PRINT THE RESULT OF THE QUERY -->
-    <p id = "result"></p>
+    <div>
+        <h1>Chacha Chaudhary Voice ChatBot</h1>
+        <!-- TEXT BOX FOR INP -->
+        <input style="width: 500px;" type="text" id="output" name="output" placeholder="Enter your query from Chacha.."><br>
+        <!-- BUTTON TO START REC -->
+        <button id = "start">Start</button>
+        <!-- BUTTON TO SUBMIT -->
+        <button onclick="sendData()">submit</button>
+        <!-- AREA TO PRINT THE RESULT OF THE QUERY -->
+        <p id = "result"></p>
+
+        <!-- SCRIPT TO HANDLE THE SPEECH RECOGNITION AND SPEECH SYNTHESIS -->
+    </div>
+    <div id="container"></div>
     <script>
         const output = document.getElementById('output');
         const start = document.getElementById('start');
@@ -68,5 +85,98 @@
             }); 
         } 
     </script>
+    <script type="module">
+        import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/build/three.module.js';
+        import { FBXLoader } from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/examples/jsm/loaders/FBXLoader.js';
+        import { OrbitControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r127/examples/jsm/controls/OrbitControls.js';
+  
+        // Create a scene
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffffff);
+  
+        // Create a camera
+        const camera = new THREE.PerspectiveCamera(
+          40,
+          -1 + window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+        camera.position.z = 5;
+        // Create a renderer
+        const renderer = new THREE.WebGLRenderer();
+        const container = document.getElementById('container');
+        renderer.setSize(window.innerWidth/2, window.innerHeight);
+        container.appendChild(renderer.domElement);
+  
+        // Create ambient light
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+  
+        // Create directional light
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(1, 1, 1).normalize();
+        scene.add(directionalLight);
+  
+        // Load the FBX model with animation
+        const loader = new FBXLoader();
+        loader.load(
+          './TalkingF.fbx',
+          (fbx) => {
+            // Traverse the model and set materials to use vertex colors
+            fbx.traverse((child) => {
+              if (child.isMesh) {
+                child.material.vertexColors = THREE.VertexColors;
+              }
+            });
+  
+            // Access the first animation clip (you may have multiple animations)
+            const animation = new THREE.AnimationMixer(fbx);
+            const clip = fbx.animations[0];
+  
+            // Create an action to play the animation
+            const action = animation.clipAction(clip);
+            action.play();
+  
+            // Add the model to the scene
+            scene.add(fbx);
+  
+            // Update function for animation
+            const animate = () => {
+              requestAnimationFrame(animate);
+  
+              // Update the animation mixer
+              animation.update(0.008); // You may use delta time for a smoother animation
+  
+              renderer.render(scene, camera);
+            };
+  
+            animate();
+          },
+          (xhr) => {
+            console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
+          },
+          (error) => {
+            console.error('Error loading FBX model', error);
+          }
+        );
+  
+        // Create OrbitControls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+        controls.screenSpacePanning = false;
+        controls.maxPolarAngle = Math.PI / 2;
+  
+        // Handle window resize
+        window.addEventListener('resize', () => {
+          const newWidth = window.innerWidth;
+          const newHeight = window.innerHeight;
+  
+          camera.aspect = newWidth / newHeight;
+          camera.updateProjectionMatrix();
+  
+          renderer.setSize(newWidth, newHeight);
+        });
+      </script>
 </body>
 </html>
